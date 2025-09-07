@@ -453,19 +453,20 @@ cron.schedule('0 59 23 * * *', () => {
 //////////////////////////////////////////////
 //========= Connecting to Database =========//
 //////////////////////////////////////////////
-(async() => {
+const mongoose = require("mongoose");
+
+(async () => {
   try {
-        await sequelize.authenticate();
-        const authentication = {};
-        authentication.Sequelize = Sequelize;
-        authentication.sequelize = sequelize;
-        const models = require('./includes/database/model')(authentication);
-        logger(global.getText('rxabdullah', 'successConnectDatabase'), '[ DATABASE ]');
-        const botData = {};
-        botData.models = models
-        onBot(botData);
-    } catch (error) { logger(global.getText('rxabdullah', 'successConnectDatabase', JSON.stringify(error)), '[ DATABASE ]'); }
-console.log(chalk.bold.hex("#eff1f0").bold("================== SUCCESFULLY ====================="));  
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: "mybotdb",
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log("✅ MongoDB Connected");
+    onBot(); // Bot start
+  } catch (err) {
+    console.error("❌ MongoDB Connection Error:", err);
+  }
 })();
 
-process.on('unhandledRejection', (err, p) => {});
+process.on('unhandledRejection', err => console.error(err));
