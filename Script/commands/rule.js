@@ -2,19 +2,35 @@ const axios = require("axios");
 
 module.exports.config = {
   name: "rules",
-  version: "2.3.1",
+  version: "2.3.2",
   hasPermssion: 0,
   credits: "rX Abdullah",
-  description: "Show/add/remove rules per group (API version)",
+  description: "Show/add/remove rules per group (dynamic API from GitHub JSON)",
   commandCategory: "noprefix",
   usages: "rules / !rules add/remove/all",
   cooldowns: 5,
 };
 
-const API_URL = "https://rx-rules-api.onrender.com/rules"; // আপনার API URL
+// GitHub JSON URL
+const githubJSON = "https://raw.githubusercontent.com/rummmmna21/rx-api/refs/heads/main/baseApiUrl.json";
+
+// Fetch rules API URL from GitHub JSON
+async function getRulesAPI() {
+  try {
+    const res = await axios.get(githubJSON);
+    if (res.data && res.data.rules) return res.data.rules;
+    throw new Error("rules key not found in JSON");
+  } catch (e) {
+    console.error("Failed to fetch rules API:", e.message);
+    return null;
+  }
+}
 
 // Fetch rules from API
 async function getRules(threadID) {
+  const API_URL = await getRulesAPI();
+  if (!API_URL) return { threadID, listRule: [] };
+
   try {
     const res = await axios.get(`${API_URL}?threadID=${threadID}`);
     console.log("ThreadID:", threadID, "Rules fetched:", res.data);
@@ -27,6 +43,9 @@ async function getRules(threadID) {
 
 // Save rules to API
 async function saveRules(threadID, rulesList) {
+  const API_URL = await getRulesAPI();
+  if (!API_URL) return;
+
   try {
     const res = await axios.post(API_URL, { threadID, listRule: rulesList });
     console.log("Rules saved:", res.data);
